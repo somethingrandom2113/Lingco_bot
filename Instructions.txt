@@ -1,0 +1,150 @@
+================================================================================
+                           LINGCO API GUIDE
+================================================================================
+
+OVERVIEW
+--------
+All commands are run in WSL. To open WSL, type "wsl" in PowerShell and hit enter.
+Never run these commands in PowerShell itself.
+
+
+================================================================================
+STEP 1 -- GET YOUR JWT TOKEN
+================================================================================
+
+1. Open Lingco in Firefox/chrome
+2. Press F12 to open DevTools
+3. Click the "Network" tab
+4. Submit any answer on the vocab set
+5. Click the POST request that appears
+6. Click the "Headers" tab on the right panel
+7. Find the line that says:
+       Authorization: Bearer eyJ...
+8. Copy everything AFTER "Bearer " (the long eyJ... string)
+
+NOTE: This token expires ~1 hour after you log in. Grab a new one each session.
+
+
+================================================================================
+STEP 2 -- GET YOUR SESSION ID
+================================================================================
+
+1. In the same POST request from Step 1
+2. Look at the URL at the top of the Headers tab
+3. It will look like:
+       https://class.lingco.io/api/vocab_sets/sessions/XXXXXXXX/responses
+4. The number where XXXXXXXX is = your Session ID
+
+NOTE: This changes every time you start a new Lingco session and is NOT the same
+as the vocab set id.
+
+
+================================================================================
+STEP 3 -- GET YOUR SESSION UUID
+================================================================================
+
+1. In the same POST request from Step 1
+2. In the Headers tab, find the line:
+       X-User-Session-UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+3. Copy the value after the colon
+
+
+================================================================================
+STEP 4 -- GET YOUR VOCAB SET ID
+================================================================================
+
+1. Look at the URL in your browser while on the vocab set page
+2. It will look like:
+       https://class.lingco.io/content/vocab_sets/XXXXX/session/learn
+3. The number where XXXXX is = your Vocab Set ID
+
+
+================================================================================
+STEP 5 -- GET ALL TERM IDs AND ANSWERS (GET REQUEST)
+================================================================================
+
+Run this command in WSL (replace the 3 placeholder values):
+
+------------------------------------------------------------
+curl -X GET "https://class.lingco.io/api/content/vocab_sets/VOCAB_SET_ID?progress=true" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "X-User-Session-UUID: YOUR_UUID" | python3 -m json.tool
+------------------------------------------------------------
+
+To use:
+- Replace VOCAB_SET_ID   with the number from Step 4
+- Replace YOUR_JWT_TOKEN with the token from Step 1
+- Replace YOUR_UUID      with the UUID from Step 3
+
+
+READING THE RESPONSE:
+Look for the "terms" array. Each entry looks like this:
+
+    {
+        "id": 347860,                        <-- this is your term_id
+        "term": "antipatico, antipatica",    <-- this is your response value
+        "definition": "unpleasant"           <-- English meaning for reference
+    }
+
+Write down each "id" and "term" pair. You will need them for Step 6.
+
+Also look for the "progress" array. Each entry looks like this:
+
+    {
+        "id": 347860,      <-- matches term id
+        "level": 0,        <-- 0 means not studied yet
+        "attempts": 0,
+        "correct": 0
+    }
+
+
+================================================================================
+STEP 6 -- SEND A CORRECT ANSWER (POST REQUEST)
+================================================================================
+
+Run this command in WSL for each term (replace all placeholder values):
+
+------------------------------------------------------------
+curl -X POST https://class.lingco.io/api/vocab_sets/sessions/SESSION_ID/responses \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-User-Session-UUID: YOUR_UUID" \
+  -d '{
+    "correct": true,
+    "level": 5,
+    "prompt_in_target": false,
+    "prompt_with": "text",
+    "respond_in_target": true,
+    "respond_with": "text",
+    "response": "TERM_HERE",
+    "scheduled": true,
+    "term_id": TERM_ID_HERE,
+    "time_spent": 1.5,
+    "type": "multiple_choice"
+  }'
+------------------------------------------------------------
+
+To use:
+- Replace SESSION_ID    with the number from Step 2
+- Replace YOUR_JWT_TOKEN with the token from Step 1
+- Replace YOUR_UUID     with the UUID from Step 3
+- Replace TERM_HERE     with the "term" value from Step 5  (e.g. "paciante")
+- Replace TERM_ID_HERE  with the "id" value from Step 5    (e.g. 347871)
+
+Run this once for every term in the vocab set.
+
+
+================================================================================
+NOTES
+================================================================================
+
+- level: 5         sets the term as mastered so it stops reappearing
+- time_spent       keep it between 1.5 and 4.0 to look normal
+- JWT token        expires ~1 hour after login, grab a fresh one each session
+- Session ID       changes every time you start a new session on Lingco
+- Always use WSL   type "wsl" in PowerShell first, never run curl in PowerShell
+
+
+================================================================================
+
+(yes this is is ai made, sorry)
