@@ -6,5 +6,5 @@ DISCLAIMER — The something.random account and its operator(s) accept no respon
 
 WARNING — Improper use may harm the Lingco API or interface. Use this program responsibly and at your own risk.
 
-signed- 𝐬𝐨𝐦𝐞𝐭𝐡𝐢𝐧𝐠.𝐫𝐚𝐧𝐝𝐨𝐦  
+
 
